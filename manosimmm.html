@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💗 Mano Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#FFE3EF;
+    --bg-2:#FFD1E8;
+    --bg-3:#F3C9FF;
+    --panel:#FFFFFF;
+    --panel-edge:#FFC2E1;
+    --plum:#3A1533;
+    --plum-soft:#6E3A63;
+    --rose:#FF4FA0;
+    --rose-dark:#E23E8B;
+    --lavender:#9B5CFF;
+    --lavender-dark:#7C3FE0;
+    --peach:#FF9457;
+    --peach-dark:#F0793A;
+    --mint:#2FDDB0;
+    --gold:#FFC24B;
+    --code-bg:#33113A;
+    --code-bg-2:#421352;
+    --shadow: 0 10px 30px rgba(216, 60, 140, 0.18);
+    --radius-lg: 26px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    font-family:'Quicksand', sans-serif;
+    color: var(--plum);
+    background:
+      radial-gradient(circle at 8% 10%, rgba(255,255,255,0.55), transparent 40%),
+      radial-gradient(circle at 92% 85%, rgba(255,255,255,0.4), transparent 45%),
+      linear-gradient(150deg, var(--bg-1) 0%, var(--bg-2) 45%, var(--bg-3) 100%);
+    background-attachment: fixed;
+  }
+  ::selection{ background: var(--rose); color:#fff; }
+  a{ color: inherit; }
+
+  .app{ max-width: 1400px; margin: 0 auto; padding: 28px 22px 60px; position: relative; }
+
+  .blob{ position:fixed; border-radius:50%; filter: blur(0px); opacity:.35; z-index:0; pointer-events:none; }
+  .blob.b1{ width:260px; height:260px; background: var(--rose); top:-80px; left:-80px; animation: float1 14s ease-in-out infinite; }
+  .blob.b2{ width:200px; height:200px; background: var(--lavender); bottom:-60px; right:-60px; animation: float2 16s ease-in-out infinite; }
+  .blob.b3{ width:140px; height:140px; background: var(--gold); top:40%; right:2%; animation: float1 12s ease-in-out infinite reverse; opacity:.25;}
+  @keyframes float1{ 0%,100%{ transform: translate(0,0) rotate(0deg);} 50%{ transform: translate(20px,30px) rotate(20deg);} }
+  @keyframes float2{ 0%,100%{ transform: translate(0,0) rotate(0deg);} 50%{ transform: translate(-25px,-20px) rotate(-15deg);} }
+
+  header.hero{
+    position: relative; z-index: 1;
+    display:flex; align-items:center; justify-content:space-between; gap: 20px;
+    margin-bottom: 22px; flex-wrap: wrap;
+  }
+  .title-block{ display:flex; align-items:center; gap:16px; }
+  .mascot{
+    font-size: 46px; width:74px; height:74px; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(145deg,#fff, #FFE1F1);
+    border-radius: 50%; box-shadow: var(--shadow);
+    border: 3px solid #fff;
+    transition: transform .25s ease;
+  }
+  .mascot.bump{ animation: bump .5s ease; }
+  @keyframes bump{ 0%{transform:scale(1) rotate(0);} 30%{transform:scale(1.18) rotate(-8deg);} 60%{transform:scale(0.95) rotate(6deg);} 100%{transform:scale(1) rotate(0);} }
+  h1{
+    font-family:'Baloo 2', sans-serif; font-weight:800; font-size: 34px; margin:0;
+    color: var(--rose-dark);
+    text-shadow: 2px 2px 0 #fff, 4px 4px 0 rgba(226,62,139,.15);
+    letter-spacing: .5px;
+  }
+  h1 .spark{ color: var(--lavender-dark); }
+  .subtitle{ margin: 4px 0 0; font-size: 14.5px; color: var(--plum-soft); font-weight:600; }
+
+  .top-actions{ display:flex; gap:10px; }
+  .pill-btn{
+    font-family:'Quicksand',sans-serif; font-weight:700; font-size:14px;
+    border:none; cursor:pointer; padding:10px 18px; border-radius: 999px;
+    background:#fff; color: var(--rose-dark); box-shadow: var(--shadow);
+    border: 2px solid var(--panel-edge);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .pill-btn:hover{ transform: translateY(-2px); box-shadow: 0 12px 26px rgba(216,60,140,.28); }
+  .pill-btn:active{ transform: translateY(0); }
+
+  .workbench{
+    position:relative; z-index:1;
+    display:grid; grid-template-columns: 1.05fr 1.55fr 1fr; gap: 20px;
+    align-items:start;
+  }
+  @media (max-width: 1080px){
+    .workbench{ grid-template-columns: 1fr; }
+  }
+
+  .panel{
+    background: var(--panel);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    border: 3px solid #fff;
+    outline: 3px solid var(--panel-edge);
+    outline-offset: -3px;
+    padding: 18px 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before{
+    content:''; position:absolute; top:-30px; right:-30px; width:90px; height:90px; border-radius:50%;
+    background: radial-gradient(circle, rgba(255,79,160,.14), transparent 70%);
+  }
+  .panel h2{
+    font-family:'Baloo 2', sans-serif; font-size: 19px; margin: 0 0 12px;
+    display:flex; align-items:center; gap:8px; color: var(--plum);
+  }
+  .panel h2 .tag{
+    font-size:11px; font-weight:700; background: var(--gold); color:#5c3d00;
+    padding:2px 9px; border-radius: 999px; font-family:'Quicksand',sans-serif;
+  }
+
+  .editor-wrap{
+    display:flex; background: linear-gradient(160deg, var(--code-bg), var(--code-bg-2));
+    border-radius: var(--radius-md); overflow:hidden; border: 2px solid #5A1F63;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+  }
+  .line-numbers{
+    padding: 14px 10px; text-align:right; color:#B27CC7; font: 13px/1.65 'Space Mono', monospace;
+    user-select:none; background: rgba(0,0,0,.12); min-width: 34px;
+  }
+  .line-numbers .active-line{ color: var(--gold); font-weight:700; }
+  textarea#codeEditor{
+    flex:1; resize: vertical; min-height: 300px; border:none; outline:none;
+    background: transparent; color:#FFE8F7; font: 13px/1.65 'Space Mono', monospace;
+    padding: 14px 12px; white-space: pre; overflow-wrap: normal; overflow-x:auto;
+  }
+  .code-highlight-row{
+    font: 13px/1.65 'Space Mono', monospace; padding: 0 12px; color: transparent;
+  }
+  .editor-actions{ display:flex; gap:10px; margin-top:14px; flex-wrap: wrap; }
+  .btn{
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size: 14.5px; letter-spacing:.2px;
+    border:none; cursor:pointer; padding:11px 18px; border-radius: var(--radius-sm);
+    color:#fff; box-shadow: 0 6px 0 rgba(0,0,0,.12), var(--shadow);
+    transition: transform .12s ease, box-shadow .12s ease; position:relative;
+  }
+  .btn:active{ transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.12); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; transform:none; }
+  .btn.assemble{ background: linear-gradient(145deg, var(--mint), #16B893); width:100%; justify-content:center; display:flex; align-items:center; gap:8px; font-size:16px; }
+  .btn.fetch{ background: linear-gradient(145deg, var(--rose), var(--rose-dark)); }
+  .btn.decode{ background: linear-gradient(145deg, var(--lavender), var(--lavender-dark)); }
+  .btn.execute{ background: linear-gradient(145deg, var(--peach), var(--peach-dark)); }
+  .btn.runall{ background: linear-gradient(145deg, #FF6FB8, var(--lavender-dark)); }
+  .btn.reset{ background: linear-gradient(145deg, #B9B9C9, #83839A); }
+
+  .errors-box{
+    margin-top: 10px; background:#FFE3E3; border:2px dashed #FF7A7A; color:#8A1F1F;
+    border-radius: var(--radius-sm); padding:10px 12px; font-size: 13px; font-weight:600; display:none;
+  }
+
+  .status-strip{
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 12px;
+  }
+  .status-chip{
+    background: #FFF3FA; border:2px solid var(--panel-edge); border-radius: 999px;
+    padding: 6px 12px; font-size: 12.5px; font-weight:700; color: var(--plum-soft);
+    font-family:'Space Mono', monospace; display:flex; align-items:center; gap:6px;
+  }
+  .status-chip .dot{ width:8px; height:8px; border-radius:50%; background: var(--rose); }
+  .status-chip.halted{ background:#FFE9C2; color:#7A4B00; }
+  .status-chip.halted .dot{ background: var(--gold); }
+
+  table.detail-table{
+    width:100%; border-collapse: collapse; font: 12.5px/1.4 'Space Mono', monospace;
+    border-radius: var(--radius-md); overflow:hidden; box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  }
+  table.detail-table th, table.detail-table td{
+    padding: 9px 8px; text-align:center; border-bottom: 1px solid #FBE1F0;
+  }
+  table.detail-table th{
+    background: linear-gradient(145deg, var(--rose), var(--rose-dark)); color:#fff;
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size: 12.5px; letter-spacing:.3px;
+  }
+  table.detail-table td.label{ text-align:left; font-family:'Quicksand',sans-serif; font-weight:700; font-size:12px; color: var(--plum); }
+  table.detail-table tr.phase-neutral td{ background:#FFF8FC; }
+  table.detail-table tr.phase-fetch td{ background:#FFE3F2; }
+  table.detail-table tr.phase-decode td{ background:#F1E3FF; }
+  table.detail-table tr.phase-execute td{ background:#FFEBDC; }
+  table.detail-table tr.newest{ animation: rowIn .4s ease; }
+  @keyframes rowIn{ from{ opacity:0; transform: translateY(-6px);} to{ opacity:1; transform:translateY(0);} }
+  table.detail-table tr.newest td:not(.label){ box-shadow: inset 0 0 0 2px var(--gold); }
+
+  .placeholder-row td{ color:#E3B9D2; }
+
+  .narration{
+    margin-top: 14px; background: linear-gradient(160deg,#FFF6FB,#FDECF7);
+    border: 2px dashed var(--panel-edge); border-radius: var(--radius-md);
+    padding: 12px 14px; max-height: 150px; overflow-y:auto; font-size: 13px; line-height:1.55;
+  }
+  .narration p{ margin: 0 0 6px; }
+  .narration .tagF{ color: var(--rose-dark); font-weight:700; }
+  .narration .tagD{ color: var(--lavender-dark); font-weight:700; }
+  .narration .tagE{ color: var(--peach-dark); font-weight:700; }
+  .narration .tagH{ color:#B37B00; font-weight:700; }
+  .narration .tagI{ color:#2FA98A; font-weight:700; }
+
+  .control-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px; }
+
+  /* ---------------- memory panel ---------------- */
+  .mem-scroll{ max-height: 480px; overflow-y:auto; border-radius: var(--radius-md); border:2px solid var(--panel-edge); }
+  table.mem-table{ width:100%; border-collapse: collapse; font: 12.5px/1.4 'Space Mono', monospace; }
+  table.mem-table th{
+    position: sticky; top:0; background: linear-gradient(145deg, var(--lavender), var(--lavender-dark));
+    color:#fff; padding: 8px; font-family:'Baloo 2',sans-serif; font-size:12px;
+  }
+  table.mem-table td{ padding: 7px 10px; text-align:center; border-bottom:1px solid #F2E7FF; color: var(--plum-soft); }
+  table.mem-table tr.mem-empty td{ color:#DCC9EF; }
+  table.mem-table tr.mem-ar td{ background: #FFE0F0; font-weight:700; color: var(--rose-dark); }
+  table.mem-table tr.mem-pc td{ background: #FFF3D6; font-weight:700; color:#7A5200; }
+  table.mem-table tr.mem-ar.mem-pc td{ background: linear-gradient(90deg,#FFE0F0,#FFF3D6); }
+  table.mem-table td.mem-marker{ width: 26px; font-size:13px; }
+
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:12px; color: var(--plum-soft); font-weight:600;}
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:12px; height:12px; border-radius:4px; display:inline-block; }
+
+  /* ---------------- confetti ---------------- */
+  #confettiLayer{ position: fixed; inset:0; pointer-events:none; z-index: 50; overflow:hidden; }
+  .confetti-piece{ position:absolute; top:-30px; font-size: 22px; animation: fall linear forwards; }
+  @keyframes fall{ to{ transform: translateY(110vh) rotate(360deg); opacity: .9; } }
+
+  .halt-banner{
+    display:none; margin-top:12px; text-align:center; font-family:'Baloo 2',sans-serif;
+    font-weight:800; font-size: 16px; color:#7A4B00; background: linear-gradient(145deg,#FFE9C2,#FFD98F);
+    border-radius: var(--radius-md); padding: 10px; border:2px solid #FFC24B;
+  }
+
+  .modal-backdrop{ position:fixed; inset:0; background: rgba(58,21,51,.45); display:none; align-items:center; justify-content:center; z-index:100; padding:20px;}
+  .modal{ background:#fff; border-radius: var(--radius-lg); max-width: 620px; width:100%; max-height:80vh; overflow-y:auto; padding: 24px 26px; box-shadow: var(--shadow); border: 3px solid var(--panel-edge); }
+  .modal h3{ font-family:'Baloo 2',sans-serif; color: var(--rose-dark); margin-top:0; }
+  .modal table{ width:100%; border-collapse:collapse; font-size: 13px; margin-top:10px;}
+  .modal table td, .modal table th{ padding:6px 8px; border-bottom:1px solid #FBE1F0; text-align:left; }
+  .modal table th{ color: var(--rose-dark); font-family:'Baloo 2',sans-serif; }
+  .modal-close{ margin-top: 16px; }
+  code.kbd{ background:#FFF0F6; padding:2px 6px; border-radius:6px; font-family:'Space Mono',monospace; color: var(--rose-dark); }
+
+  footer.credit{ text-align:center; margin-top: 26px; font-size: 12.5px; color: var(--plum-soft); opacity:.8; }
+</style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+<div id="confettiLayer"></div>
+
+<div class="app">
+
+  <header class="hero">
+    <div class="title-block">
+      <div class="mascot" id="mascot">🐰</div>
+      <div>
+        <h1>Mano Simulator <span class="spark">✨</span></h1>
+        <p class="subtitle">Fetch → Decode → Execute, one sparkly micro-step at a time</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="pill-btn" id="helpBtn">💌 Help</button>
+      <button class="pill-btn" id="resetBtn">🔄 Reset</button>
+    </div>
+  </header>
+
+  <div class="workbench">
+
+    <!-- CODE EDITOR -->
+    <section class="panel">
+      <h2>📝 Code Editor <span class="tag">assembly</span></h2>
+      <div class="editor-wrap">
+        <div class="line-numbers" id="lineNumbers">1</div>
+        <textarea id="codeEditor" spellcheck="false"></textarea>
+      </div>
+      <div class="editor-actions">
+        <button class="btn assemble" id="assembleBtn">🎀 Assemble</button>
+      </div>
+      <div class="errors-box" id="errorsBox"></div>
+    </section>
+
+    <section class="panel">
+      <h2>💫 Instructions Detail <span class="tag">CPU trace</span></h2>
+      <div class="status-strip" id="statusStrip"></div>
+      <div style="overflow-x:auto;">
+        <table class="detail-table" id="detailTable">
+          <thead>
+            <tr><th style="text-align:left;">Element</th><th>IR</th><th>AC</th><th>DR</th><th>PC</th><th>AR</th><th>M[AR]</th><th>E</th></tr>
+          </thead>
+          <tbody id="detailBody"></tbody>
+        </table>
+      </div>
+      <div class="control-row">
+        <button class="btn fetch" id="fetchBtn">🌸 Fetch</button>
+        <button class="btn decode" id="decodeBtn">💜 Decode</button>
+        <button class="btn execute" id="executeBtn">🍑 Execute</button>
+        <button class="btn runall" id="runAllBtn">🎢 Run All</button>
+      </div>
+      <div class="halt-banner" id="haltBanner">🎉 Program halted! Final AC shown above ✨</div>
+      <div class="narration" id="narration"></div>
+    </section>
+
+    <section class="panel">
+      <h2>🗂️ Memory Table <span class="tag">RAM</span></h2>
+      <div class="mem-scroll">
+        <table class="mem-table">
+          <thead><tr><th></th><th>Address</th><th>Value</th></tr></thead>
+          <tbody id="memBody"></tbody>
+        </table>
+      </div>
+      <div class="legend">
+        <span><i style="background:#FFE0F0;"></i> AR (working address)</span>
+        <span><i style="background:#FFF3D6;"></i> PC (next fetch)</span>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="credit">made with 💖 for computer architecture lovers — fetch, decode, execute, repeat</footer>
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal-backdrop" id="helpModal">
+  <div class="modal">
+    <h3>💌 How this works</h3>
+    <p>Write Mano assembly in the editor, hit <b>Assemble</b>, then walk the CPU cycle one phase at a time — or let it run itself with <b>Run All</b>.</p>
+    <ul>
+      <li><b>Fetch</b> — <code class="kbd">AR ← PC</code>, then <code class="kbd">IR ← M[AR]</code>, <code class="kbd">PC ← PC+1</code></li>
+      <li><b>Decode</b> — <code class="kbd">AR ← IR[0:11]</code>, figures out the opcode</li>
+      <li><b>Execute</b> — click once per micro-step until the instruction finishes</li>
+    </ul>
+    <table>
+      <tr><th>Memory-reference</th><th>Meaning</th></tr>
+      <tr><td>AND / ADD / LDA / STA</td><td>AC ops with M[AR]</td></tr>
+      <tr><td>BUN / BSA / ISZ</td><td>branch, branch-and-save, increment-and-skip</td></tr>
+      <tr><th>Register-reference</th><th>Meaning</th></tr>
+      <tr><td>CLA CLE CMA CME CIR CIL</td><td>clear/complement/rotate AC or E</td></tr>
+      <tr><td>INC SPA SNA SZA SZE HLT</td><td>increment, skip conditions, halt</td></tr>
+    </table>
+    <p style="font-size:12.5px; color:#7A3D6B;">Labels end with a comma (e.g. <code class="kbd">NM1, DEC 83</code>). Addresses in <code class="kbd">ORG</code> and instruction operands are hex; <code class="kbd">DEC</code> values are decimal. Add <code class="kbd">I</code> after an operand for indirect addressing.</p>
+    <button class="btn assemble modal-close" id="closeHelp">Got it 💗</button>
+  </div>
+</div>
+
+<script>
+
+
+const MEM_OPCODES = { AND:0, ADD:1, LDA:2, STA:3, BUN:4, BSA:5, ISZ:6 };
+const MEM_NAMES = ['AND','ADD','LDA','STA','BUN','BSA','ISZ'];
+const REG_CODES = { CLA:0x800, CLE:0x400, CMA:0x200, CME:0x100, CIR:0x080, CIL:0x040, INC:0x020, SPA:0x010, SNA:0x008, SZA:0x004, SZE:0x002, HLT:0x001 };
+const IO_CODES  = { INP:0x800, OUT:0x400, SKI:0x200, SKO:0x100, ION:0x080, IOF:0x040 };
+const REG_BY_VAL = Object.fromEntries(Object.entries(REG_CODES).map(([k,v])=>[v,k]));
+const IO_BY_VAL  = Object.fromEntries(Object.entries(IO_CODES).map(([k,v])=>[v,k]));
+
+function to16(v){ return v & 0xFFFF; }
+function hex4(v){ return '0x' + (v & 0xFFFF).toString(16).toUpperCase().padStart(4,'0'); }
+
+function stripComment(line){
+  let i = line.indexOf(';'); let j = line.indexOf('//'); let cut=-1;
+  if (i>=0) cut=i; if (j>=0 && (cut<0 || j<cut)) cut=j;
+  return cut>=0 ? line.slice(0,cut) : line;
+}
+
+function assemble(sourceText){
+  const rawLines = sourceText.split('\n');
+  const lines = [];
+  rawLines.forEach((raw, idx)=>{
+    const cleaned = stripComment(raw).trim();
+    if (cleaned.length) lines.push({ text: cleaned, lineNo: idx });
+  });
+
+  let loc = 0, startAddress = null;
+  const symtab = {}, parsed = [];
+  for (const ln of lines){
+    let tokens = ln.text.split(/[\s,]+/).filter(Boolean);
+    const commaMatch = ln.text.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*,/);
+    let label = null;
+    if (commaMatch){
+      label = commaMatch[1].toUpperCase();
+      tokens = ln.text.slice(commaMatch[0].length).trim().split(/\s+/).filter(Boolean);
+    }
+    if (tokens.length === 0){ if (label) symtab[label]=loc; continue; }
+    const op = tokens[0].toUpperCase();
+    if (op === 'ORG'){ loc = parseInt(tokens[1],16); if (startAddress===null) startAddress=loc; parsed.push({op,lineNo:ln.lineNo}); continue; }
+    if (op === 'END'){ parsed.push({op,lineNo:ln.lineNo}); break; }
+    if (label) symtab[label]=loc;
+    parsed.push({ op, arg: tokens[1], indirect: !!(tokens[2] && tokens[2].toUpperCase()==='I'), label, loc, lineNo: ln.lineNo });
+    loc++;
+  }
+  if (startAddress === null) startAddress = 0;
+
+  const memory = {}, addrToLine = {}, errors = [];
+  for (const p of parsed){
+    if (p.op === 'ORG' || p.op === 'END') continue;
+    addrToLine[p.loc] = p.lineNo;
+    const op = p.op;
+    try{
+      if (op === 'DEC'){
+        const v = parseInt(p.arg,10);
+        memory[p.loc] = to16(v<0 ? 0x10000+v : v);
+      } else if (op === 'HEX'){
+        memory[p.loc] = to16(parseInt(p.arg,16));
+      } else if (MEM_OPCODES.hasOwnProperty(op)){
+        let addrVal;
+        const key = p.arg ? p.arg.toUpperCase() : '';
+        if (symtab.hasOwnProperty(key)) addrVal = symtab[key];
+        else addrVal = parseInt(p.arg,16);
+        if (Number.isNaN(addrVal)) throw new Error(`Unknown label/address "${p.arg}"`);
+        let instr = (MEM_OPCODES[op] << 12) | (addrVal & 0xFFF);
+        if (p.indirect) instr |= 0x8000;
+        memory[p.loc] = to16(instr);
+      } else if (REG_CODES.hasOwnProperty(op)){
+        memory[p.loc] = to16(0x7000 | REG_CODES[op]);
+      } else if (IO_CODES.hasOwnProperty(op)){
+        memory[p.loc] = to16(0xF000 | IO_CODES[op]);
+      } else {
+        throw new Error(`Unknown mnemonic "${op}"`);
+      }
+    } catch(e){ errors.push(`Line ${p.lineNo+1}: ${e.message}`); }
+  }
+  return { memory, symtab, startAddress, addrToLine, errors, parsed };
+}
+
+function memval(memory, addr){ return memory[addr] !== undefined ? memory[addr] : 0; }
+function decodeOpcode(IR){ return { I:(IR>>15)&1, D:(IR>>12)&0x7, addr12: IR & 0xFFF }; }
+
+function buildExecPlan(state){
+  const { I, D } = decodeOpcode(state.IR);
+  const steps = []; const low12 = state.IR & 0xFFF;
+  if (D < 7){
+    if (I) steps.push({ desc:`Indirect: AR ← M[AR] (${hex4(memval(state.memory,state.AR))})`, run:(s)=>{ s.AR = memval(s.memory,s.AR); } });
+    switch(D){
+      case 0:
+        steps.push({ desc:'DR ← M[AR]', run:(s)=>{ s.DR = memval(s.memory,s.AR); } });
+        steps.push({ desc:'AC ← AC AND DR · SC ← 0', run:(s)=>{ s.AC = to16(s.AC & s.DR); s.SC=0; } });
+        break;
+      case 1:
+        steps.push({ desc:'DR ← M[AR]', run:(s)=>{ s.DR = memval(s.memory,s.AR); } });
+        steps.push({ desc:'AC ← AC + DR, E ← carry · SC ← 0', run:(s)=>{ const sum=s.AC+s.DR; s.E = sum>0xFFFF?1:0; s.AC = to16(sum); s.SC=0; } });
+        break;
+      case 2:
+        steps.push({ desc:'DR ← M[AR]', run:(s)=>{ s.DR = memval(s.memory,s.AR); } });
+        steps.push({ desc:'AC ← DR · SC ← 0', run:(s)=>{ s.AC = s.DR; s.SC=0; } });
+        break;
+      case 3:
+        steps.push({ desc:'M[AR] ← AC · SC ← 0', run:(s)=>{ s.memory[s.AR]=s.AC; s.SC=0; } });
+        break;
+      case 4:
+        steps.push({ desc:'PC ← AR · SC ← 0', run:(s)=>{ s.PC = s.AR; s.SC=0; } });
+        break;
+      case 5:
+        steps.push({ desc:'M[AR] ← PC, AR ← AR + 1', run:(s)=>{ s.memory[s.AR]=s.PC; s.AR = to16(s.AR+1) & 0xFFF; } });
+        steps.push({ desc:'PC ← AR · SC ← 0', run:(s)=>{ s.PC = s.AR; s.SC=0; } });
+        break;
+      case 6:
+        steps.push({ desc:'DR ← M[AR]', run:(s)=>{ s.DR = memval(s.memory,s.AR); } });
+        steps.push({ desc:'DR ← DR + 1', run:(s)=>{ s.DR = to16(s.DR+1); } });
+        steps.push({ desc:'M[AR] ← DR, if DR=0 PC ← PC+1 · SC ← 0', run:(s)=>{ s.memory[s.AR]=s.DR; if (s.DR===0) s.PC = to16(s.PC+1); s.SC=0; } });
+        break;
+    }
+  } else {
+    if (!I){
+      const name = REG_BY_VAL[low12] || '???';
+      steps.push({ desc:`${name} · SC ← 0`, run:(s)=>{
+        switch(name){
+          case 'CLA': s.AC = 0; break;
+          case 'CLE': s.E = 0; break;
+          case 'CMA': s.AC = to16(~s.AC); break;
+          case 'CME': s.E = s.E ? 0 : 1; break;
+          case 'CIR': { const c = s.AC & 1; s.AC = to16((s.AC>>1) | (s.E<<15)); s.E = c; break; }
+          case 'CIL': { const c = (s.AC>>15)&1; s.AC = to16((s.AC<<1) | s.E); s.E = c; break; }
+          case 'INC': s.AC = to16(s.AC+1); break;
+          case 'SPA': if (!(s.AC & 0x8000)) s.PC = to16(s.PC+1); break;
+          case 'SNA': if (s.AC & 0x8000) s.PC = to16(s.PC+1); break;
+          case 'SZA': if (s.AC === 0) s.PC = to16(s.PC+1); break;
+          case 'SZE': if (s.E === 0) s.PC = to16(s.PC+1); break;
+          case 'HLT': s.halted = true; break;
+        }
+        s.SC = 0;
+      }});
+    } else {
+      const name = IO_BY_VAL[low12] || '???';
+      steps.push({ desc:`${name} (no device connected) · SC ← 0`, run:(s)=>{ s.SC=0; } });
+    }
+  }
+  return steps;
+}
+
+function opcodeName(IR){
+  const { I, D } = decodeOpcode(IR);
+  if (D < 7) return MEM_NAMES[D] + (I ? ' (indirect)' : '');
+  const low12 = IR & 0xFFF;
+  return I ? (IO_BY_VAL[low12] || '???') : (REG_BY_VAL[low12] || '???');
+}
+
+
+const el = (id)=>document.getElementById(id);
+const codeEditor = el('codeEditor');
+const lineNumbers = el('lineNumbers');
+const errorsBox = el('errorsBox');
+const detailBody = el('detailBody');
+const memBody = el('memBody');
+const narration = el('narration');
+const statusStrip = el('statusStrip');
+const haltBanner = el('haltBanner');
+const mascot = el('mascot');
+
+const DEFAULT_PROGRAM =
+`        ORG 120
+        LDA NM1
+        ADD NM2
+        STA RESULT
+        HLT
+NM1,    DEC 83
+NM2,    DEC 15
+RESULT, DEC 0
+        END`;
+
+let asm = null;
+let state = null;
+let detailRows = [];
+let execPlan = [];
+let execPlanIndex = 0;
+let uiPhase = 'unassembled'; 
+let instrNumber = 1;
+let autoRunning = false;
+
+function snapshotAll(){
+  return {
+    IR: hex4(state.IR), AC: hex4(state.AC), DR: hex4(state.DR),
+    PC: hex4(state.PC), AR: hex4(state.AR), MAR: hex4(memval(state.memory, state.AR)),
+    E: state.E ? '0x1' : '0x0'
+  };
+}
+
+function updateLineNumbers(){
+  const n = codeEditor.value.split('\n').length;
+  let html = '';
+  const activeLine = (asm && state) ? asm.addrToLine[state.PC] : undefined;
+  for (let i=0;i<n;i++){
+    html += (i===activeLine) ? `<div class="active-line">${i+1} ◀</div>` : `<div>${i+1}</div>`;
+  }
+  lineNumbers.innerHTML = html;
+}
+
+function mascotReact(kind){
+  const faces = { fetch:'😳', decode:'🤔', execute:'⚡', halt:'🎉', reset:'🐰', error:'😿' };
+  mascot.textContent = faces[kind] || '🐰';
+  mascot.classList.remove('bump'); void mascot.offsetWidth; mascot.classList.add('bump');
+}
+
+function log(html, cls){
+  const p = document.createElement('p');
+  p.innerHTML = `<span class="${cls}">●</span> ${html}`;
+  narration.appendChild(p);
+  narration.scrollTop = narration.scrollHeight;
+}
+
+function renderStatusStrip(){
+  if (!state){ statusStrip.innerHTML=''; return; }
+  const chips = [
+    `PC ${hex4(state.PC)}`, `AC ${hex4(state.AC)}`, `AR ${hex4(state.AR)}`,
+    `IR ${hex4(state.IR)}`, `E ${state.E}`, `Instruction #${instrNumber}`
+  ];
+  statusStrip.innerHTML = chips.map(c=>`<span class="status-chip ${state.halted?'halted':''}"><span class="dot"></span>${c}</span>`).join('');
+}
+
+function renderDetailTable(){
+  detailBody.innerHTML = detailRows.map((r,i)=>{
+    const isNewest = i === detailRows.length - 1 && uiPhase !== 'unassembled' && uiPhase !== 'ready';
+    return `<tr class="phase-${r.phase} ${isNewest?'newest':''}">
+      <td class="label">${r.label}</td>
+      <td>${r.IR}</td><td>${r.AC}</td><td>${r.DR}</td><td>${r.PC}</td><td>${r.AR}</td><td>${r.MAR}</td><td>${r.E}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMemoryTable(){
+  if (!asm){ memBody.innerHTML=''; return; }
+  const addrs = Object.keys(asm.memory).map(Number);
+  const minA = Math.max(0, Math.min(asm.startAddress - 2, ...addrs));
+  const maxA = Math.max(asm.startAddress, ...addrs) + 6;
+  let html = '';
+  for (let a = minA; a <= maxA; a++){
+    const has = state.memory.hasOwnProperty(a);
+    const val = has ? hex4(state.memory[a]).replace('0x','') : '';
+    const isAR = state && state.AR === a;
+    const isPC = state && state.PC === a;
+    const cls = ['mem-row']; if (!has) cls.push('mem-empty'); if (isAR) cls.push('mem-ar'); if (isPC) cls.push('mem-pc');
+    const marker = isAR ? '💗' : (isPC ? '🎀' : '');
+    html += `<tr class="${cls.join(' ')}"><td class="mem-marker">${marker}</td><td>${hex4(a)}</td><td>${val}</td></tr>`;
+  }
+  memBody.innerHTML = html;
+  const arRow = memBody.querySelector('.mem-ar');
+  if (arRow) arRow.scrollIntoView({ block:'center' });
+}
+
+function renderButtons(){
+  el('fetchBtn').disabled = !(uiPhase === 'ready');
+  el('decodeBtn').disabled = !(uiPhase === 'fetched');
+  el('executeBtn').disabled = !(uiPhase === 'decoded' || uiPhase === 'executing');
+  el('runAllBtn').disabled = (uiPhase === 'unassembled' || uiPhase === 'halted' || autoRunning);
+  el('runAllBtn').textContent = autoRunning ? '⏹ Stop' : '🎢 Run All';
+  haltBanner.style.display = (uiPhase === 'halted') ? 'block' : 'none';
+}
+
+function renderAll(){
+  renderDetailTable();
+  renderMemoryTable();
+  renderStatusStrip();
+  renderButtons();
+  updateLineNumbers();
+}
+
+function doAssemble(){
+  asm = assemble(codeEditor.value);
+  if (asm.errors.length){
+    errorsBox.style.display = 'block';
+    errorsBox.innerHTML = '😿 ' + asm.errors.join('<br>😿 ');
+    uiPhase = 'unassembled';
+    mascotReact('error');
+    detailRows = []; state = null;
+    renderAll();
+    return;
+  }
+  errorsBox.style.display = 'none';
+  state = { PC: asm.startAddress, AR: 0, IR: 0, AC: 0, DR: 0, E: 0, halted:false, memory: {...asm.memory} };
+  instrNumber = 1;
+  uiPhase = 'ready';
+  autoRunning = false;
+  detailRows = [{ label:'Initial Values', ...snapshotAll(), phase:'neutral' }];
+  narration.innerHTML = '';
+  log('Assembled! Program loaded, ready to fetch the first instruction.', 'tagI');
+  mascotReact('reset');
+  renderAll();
+}
+
+function doFetch(){
+  if (uiPhase !== 'ready') return;
+  detailRows = [{ label:'Initial Values', ...snapshotAll(), phase:'neutral' }];
+  state.AR = state.PC;
+  detailRows.push({ label:'T0: AR ← PC', ...snapshotAll(), phase:'fetch' });
+  state.IR = memval(state.memory, state.AR);
+  state.PC = to16(state.PC + 1);
+  detailRows.push({ label:'T1: IR ← M[AR], PC ← PC+1', ...snapshotAll(), phase:'fetch' });
+  uiPhase = 'fetched';
+  log(`<span class="tagF">Fetch</span> — instruction #${instrNumber}: pulled ${hex4(state.IR)} from address ${hex4(state.AR)}, PC now ${hex4(state.PC)}.`, 'tagF');
+  mascotReact('fetch');
+  renderAll();
+}
+
+function doDecode(){
+  if (uiPhase !== 'fetched') return;
+  state.AR = state.IR & 0xFFF;
+  const name = opcodeName(state.IR);
+  detailRows.push({ label:`T2: AR ← IR[0:11] (opcode = ${name})`, ...snapshotAll(), phase:'decode' });
+  execPlan = buildExecPlan(state);
+  execPlanIndex = 0;
+  uiPhase = 'decoded';
+  log(`<span class="tagD">Decode</span> — instruction #${instrNumber} is <b>${name}</b>, effective address ${hex4(state.AR)}.`, 'tagD');
+  mascotReact('decode');
+  renderAll();
+}
+
+function doExecuteStep(){
+  if (uiPhase !== 'decoded' && uiPhase !== 'executing') return;
+  if (execPlanIndex >= execPlan.length) return;
+  const step = execPlan[execPlanIndex];
+  step.run(state);
+  const tNum = 3 + execPlanIndex;
+  detailRows.push({ label:`T${tNum}: ${step.desc}`, ...snapshotAll(), phase:'execute' });
+  execPlanIndex++;
+  log(`<span class="tagE">Execute</span> — instruction #${instrNumber}: ${step.desc}`, 'tagE');
+  mascotReact('execute');
+
+  if (execPlanIndex >= execPlan.length){
+    detailRows.push({ label:'After Execution', ...snapshotAll(), phase:'neutral' });
+    if (state.halted){
+      uiPhase = 'halted';
+      log(`<span class="tagH">HLT reached</span> — program finished! Final AC = ${hex4(state.AC)}.`, 'tagH');
+      mascotReact('halt');
+      celebrate();
+    } else {
+      uiPhase = 'ready';
+      instrNumber++;
+    }
+  } else {
+    uiPhase = 'executing';
+  }
+  renderAll();
+}
+
+function doReset(){
+  autoRunning = false;
+  if (!asm){ renderAll(); return; }
+  state = { PC: asm.startAddress, AR: 0, IR: 0, AC: 0, DR: 0, E: 0, halted:false, memory: {...asm.memory} };
+  instrNumber = 1;
+  uiPhase = 'ready';
+  detailRows = [{ label:'Initial Values', ...snapshotAll(), phase:'neutral' }];
+  narration.innerHTML = '';
+  log('Reset — back to the start of the program.', 'tagI');
+  mascotReact('reset');
+  renderAll();
+}
+
+function runAllStep(){
+  if (!autoRunning) return;
+  if (uiPhase === 'ready'){ doFetch(); }
+  else if (uiPhase === 'fetched'){ doDecode(); }
+  else if (uiPhase === 'decoded' || uiPhase === 'executing'){ doExecuteStep(); }
+
+  if (uiPhase === 'halted'){ autoRunning = false; renderButtons(); return; }
+  setTimeout(runAllStep, 550);
+}
+function toggleRunAll(){
+  if (uiPhase === 'unassembled' || uiPhase === 'halted') return;
+  autoRunning = !autoRunning;
+  renderButtons();
+  if (autoRunning) runAllStep();
+}
+
+function celebrate(){
+  const layer = el('confettiLayer');
+  const pieces = ['💖','✨','🎀','💗','🌸','💫'];
+  for (let i=0;i<28;i++){
+    const s = document.createElement('span');
+    s.className = 'confetti-piece';
+    s.textContent = pieces[Math.floor(Math.random()*pieces.length)];
+    s.style.left = Math.random()*100 + 'vw';
+    s.style.fontSize = (14 + Math.random()*16) + 'px';
+    s.style.animationDuration = (2.2 + Math.random()*1.8) + 's';
+    layer.appendChild(s);
+    setTimeout(()=>s.remove(), 4200);
+  }
+}
+
+el('assembleBtn').addEventListener('click', doAssemble);
+el('fetchBtn').addEventListener('click', doFetch);
+el('decodeBtn').addEventListener('click', doDecode);
+el('executeBtn').addEventListener('click', doExecuteStep);
+el('runAllBtn').addEventListener('click', toggleRunAll);
+el('resetBtn').addEventListener('click', doReset);
+codeEditor.addEventListener('input', updateLineNumbers);
+codeEditor.addEventListener('scroll', ()=>{ lineNumbers.scrollTop = codeEditor.scrollTop; });
+
+el('helpBtn').addEventListener('click', ()=>{ el('helpModal').style.display='flex'; });
+el('closeHelp').addEventListener('click', ()=>{ el('helpModal').style.display='none'; });
+el('helpModal').addEventListener('click', (e)=>{ if (e.target.id==='helpModal') el('helpModal').style.display='none'; });
+
+codeEditor.value = DEFAULT_PROGRAM;
+doAssemble();
+</script>
+</body>
+</html>
