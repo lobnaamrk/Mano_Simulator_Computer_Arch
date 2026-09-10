@@ -6,17 +6,17 @@ The simulator reproduces the main functionality of the Mano Basic Computer archi
 
 ## Features
 
-* 🖥️ Interactive Mano Basic Computer simulator
-* ⚙️ Step-by-step **Fetch → Decode → Execute** simulation
-* ▶️ **Run All** mode for automatic execution
-* 💾 Memory table with live register tracking
-* 🔢 Two-pass assembler
-* 🏷️ Support for labels and symbolic addresses
-* 🔗 Direct and indirect addressing
-* 📖 Micro-operation narration explaining each execution step
-* 🎨 Interactive visual interface with phase indicators
-* 🐰 Animated mascot and visual feedback
-* 🎉 Completion animation when `HLT` is executed
+*  Interactive Mano Basic Computer simulator
+*  Step-by-step **Fetch → Decode → Execute** simulation
+*  **Run All** mode for automatic execution
+*  Memory table with live register tracking
+*  Two-pass assembler
+*  Support for labels and symbolic addresses
+*  Direct and indirect addressing
+*  Micro-operation narration explaining each execution step
+*  Interactive visual interface with phase indicators
+*  Animated mascot and visual feedback
+*  Completion animation when `HLT` is executed
 
 ## Supported Instruction Set
 
@@ -187,6 +187,4 @@ Register / Memory Updates
 
 Computer & Communication Engineering Student
 
----
 
-⭐ If you find this project useful for studying Computer Organization and Architecture, consider giving the repository a star!
